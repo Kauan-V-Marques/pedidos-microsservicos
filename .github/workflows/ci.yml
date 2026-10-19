@@ -1,0 +1,74 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pedidos:
+    name: pedidos (TypeScript)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: servicos/pedidos } }
+    services:
+      postgres:
+        image: postgres:18
+        env: { POSTGRES_USER: loja, POSTGRES_PASSWORD: loja, POSTGRES_DB: pedidos }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U loja" --health-interval 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm, cache-dependency-path: servicos/pedidos/package-lock.json }
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+        env: { TEST_DATABASE_URL: "postgres://loja:loja@localhost:5432/pedidos" }
+
+  estoque:
+    name: estoque (Python)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: servicos/estoque } }
+    services:
+      postgres:
+        image: postgres:18
+        env: { POSTGRES_USER: loja, POSTGRES_PASSWORD: loja, POSTGRES_DB: estoque }
+        ports: ["5432:5432"]
+        options: --health-cmd "pg_isready -U loja" --health-interval 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e ".[dev]"
+      - run: |
+          ruff check .
+          ruff format --check .
+      - run: pytest -v
+        env: { TEST_DATABASE_URL: "postgresql://loja:loja@localhost:5432/estoque" }
+
+  pagamentos:
+    name: pagamentos (C#)
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: servicos/pagamentos } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: 10.0.x }
+      - run: dotnet build -c Release -warnaserror
+      - run: dotnet test -c Release --no-build
+
+  ponta-a-ponta:
+    name: ponta a ponta (docker compose + RabbitMQ)
+    needs: [pedidos, estoque, pagamentos]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sobe o sistema inteiro
+        run: docker compose up -d --build --wait --wait-timeout 300
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install httpx pytest
+      - name: Testes da saga
+        run: pytest -v testes-e2e
+      - name: Logs dos serviços (em caso de falha)
+        if: failure()
+        run: docker compose logs --no-color pedidos estoque pagamentos

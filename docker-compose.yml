@@ -1,0 +1,65 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: loja
+      RABBITMQ_DEFAULT_PASS: loja
+    ports:
+      - "5672:5672"
+      - "15672:15672" # painel de administração: http://localhost:15672 (loja/loja)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      retries: 30
+
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: loja
+      POSTGRES_PASSWORD: loja
+      POSTGRES_DB: pedidos
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./infra/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U loja -d estoque"]
+      interval: 5s
+      retries: 30
+
+  pedidos:
+    build: servicos/pedidos
+    environment:
+      DATABASE_URL: postgres://loja:loja@postgres:5432/pedidos
+      RABBITMQ_URL: amqp://loja:loja@rabbitmq:5672
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/saude"]
+      interval: 5s
+      retries: 30
+
+  estoque:
+    build: servicos/estoque
+    environment:
+      DATABASE_URL: postgresql://loja:loja@postgres:5432/estoque
+      RABBITMQ_URL: amqp://loja:loja@rabbitmq:5672/
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres: { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/saude')"]
+      interval: 5s
+      retries: 30
+
+  pagamentos:
+    build: servicos/pagamentos
+    environment:
+      RABBITMQ_URL: amqp://loja:loja@rabbitmq:5672/
+    depends_on:
+      rabbitmq: { condition: service_healthy }
