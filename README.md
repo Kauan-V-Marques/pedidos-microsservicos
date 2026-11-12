@@ -1,10 +1,26 @@
-# Pedidos com Microsserviços e RabbitMQ
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0D1117,50:1F6FEB,100:58A6FF&height=110&section=header" alt="" width="100%">
+</p>
 
-![CI](https://github.com/Kauan-V-Marques/pedidos-microsservicos/actions/workflows/ci.yml/badge.svg)
-![RabbitMQ](https://img.shields.io/badge/RabbitMQ-4.3-FF6600?logo=rabbitmq&logoColor=white)
-![TypeScript](https://img.shields.io/badge/pedidos-TypeScript-3178C6?logo=typescript&logoColor=white)
-![Python](https://img.shields.io/badge/estoque-Python-3776AB?logo=python&logoColor=white)
-![.NET](https://img.shields.io/badge/pagamentos-C%23%20.NET-512BD4?logo=dotnet&logoColor=white)
+<h1 align="center">Pedidos com Microsserviços e RabbitMQ</h1>
+
+<p align="center"><b>Saga com compensação · Outbox transacional · Consumidores idempotentes · DLQ</b></p>
+
+<p align="center">
+  <a href="https://github.com/Kauan-V-Marques/pedidos-microsservicos/actions/workflows/ci.yml"><img src="https://github.com/Kauan-V-Marques/pedidos-microsservicos/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <img src="https://img.shields.io/badge/RabbitMQ-4.3-FF6600?logo=rabbitmq&logoColor=white" alt="RabbitMQ">
+  <img src="https://img.shields.io/badge/pedidos-TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript">
+  <img src="https://img.shields.io/badge/estoque-Python-3776AB?logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/pagamentos-C%23%20.NET-512BD4?logo=dotnet&logoColor=white" alt=".NET">
+</p>
+
+<p align="center">
+  <a href="#como-a-saga-funciona">Como a saga funciona</a> ·
+  <a href="#como-rodar">Como rodar</a> ·
+  <a href="#testes">Testes</a>
+</p>
+
+---
 
 Processamento de pedidos de uma loja de componentes de robótica com **três microsserviços em três linguagens**, conversando só por eventos no **RabbitMQ**. Nenhum serviço chama outro diretamente, e cada um tem o próprio banco de dados.
 
@@ -119,3 +135,15 @@ No GitHub Actions, cada serviço é testado na sua linguagem e, se todos passare
 Three polyglot microservices (TypeScript, Python, C#/.NET) communicating only through RabbitMQ events, each with its own database. Implements a choreography **saga** with compensation, the **transactional outbox**, idempotent consumers (**inbox**), publisher confirms, **dead-letter queues** with quorum-queue delivery limits, and deterministic response ids so redeliveries are deduplicated downstream. Row locking in sorted order prevents overselling and deadlocks under concurrency. Unit/integration tests per service plus end-to-end tests against the full Docker Compose stack in CI.
 
 </details>
+
+---
+
+<p align="center">
+  Feito por <a href="https://github.com/Kauan-V-Marques"><b>Kauan Victor Marques</b></a> ·
+  <a href="https://kauan-v-marques.github.io/curriculo/">Currículo</a> ·
+  <a href="https://github.com/Kauan-V-Marques?tab=repositories">Mais projetos</a>
+</p>
+
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0D1117,50:1F6FEB,100:58A6FF&height=80&section=footer" alt="" width="100%">
+</p>
